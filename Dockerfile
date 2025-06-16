@@ -13,8 +13,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Download and prepare models
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
 RUN python -m spacy download en_core_web_sm
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2', cache_folder='/app/models')"
 
 # Final stage
 FROM python:3.11-slim
@@ -28,8 +28,7 @@ RUN apt-get update && apt-get install -y \
 
 # Copy only necessary files from builder
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY --from=builder /root/.cache/torch /root/.cache/torch
-COPY --from=builder /root/.cache/huggingface /root/.cache/huggingface
+COPY --from=builder /app/models /app/models
 
 # Copy application code
 COPY . .
@@ -39,8 +38,8 @@ RUN mkdir -p uploads
 
 # Set environment variables
 ENV PYTHONPATH=/usr/local/lib/python3.11/site-packages
-ENV TRANSFORMERS_CACHE=/root/.cache/huggingface
-ENV TORCH_HOME=/root/.cache/torch
+ENV TRANSFORMERS_CACHE=/app/models
+ENV TORCH_HOME=/app/models
 
 # Expose port
 EXPOSE 8000
