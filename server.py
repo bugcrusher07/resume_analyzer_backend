@@ -40,7 +40,7 @@ SECURITY_HEADERS = {
 # Configure CORS with specific origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],  # Allow all origins in production
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
@@ -50,7 +50,7 @@ app.add_middleware(
 # Add trusted host middleware
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=["localhost", "127.0.0.1"]
+    allowed_hosts=["*"]  # Allow all hosts in production
 )
 
 # File size limits (in bytes)
