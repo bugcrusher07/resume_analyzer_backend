@@ -70,7 +70,7 @@ except Exception as e:
     print(f"Error loading spaCy model: {e}")
     raise
 
-# Define constants
+# Define constantsi
 TECH_SKILLS = {
     'programming': ['python', 'javascript', 'java', 'c++', 'ruby', 'php', 'swift', 'kotlin', 'typescript'],
     'frameworks': ['react', 'angular', 'vue', 'django', 'flask', 'spring', 'express', 'node.js', 'laravel'],
@@ -306,10 +306,14 @@ def track_request(ip: str) -> bool:
     request_tracker[ip].append(current_time)
     return True
 
+# @app.get("/")
+# @limiter.limit(RATE_LIMIT)
+# async def read_root(request: Request):
+    # return {"message": "Welcome to Resume Analyzer API"}
 @app.get("/")
-@limiter.limit(RATE_LIMIT)
-async def read_root(request: Request):
+async def read_root():
     return {"message": "Welcome to Resume Analyzer API"}
+
 
 @app.post("/analyze-resume")
 @limiter.limit(RATE_LIMIT)
