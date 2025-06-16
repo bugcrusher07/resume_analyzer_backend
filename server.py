@@ -1,7 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.security import APIKeyHeader
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -13,7 +12,6 @@ import shutil
 import pdfplumber
 import spacy
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sentence_transformers import SentenceTransformer
 import re
 import docx2txt
 import numpy as np
@@ -65,12 +63,11 @@ RATE_LIMIT = "10/minute"
 # Request tracking for additional protection
 request_tracker = {}
 
-# Initialize NLP models
+# Initialize NLP model
 try:
     nlp = spacy.load("en_core_web_sm")
-    sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
 except Exception as e:
-    print(f"Error loading models: {e}")
+    print(f"Error loading spaCy model: {e}")
     raise
 
 # Define constants
@@ -171,8 +168,8 @@ def identify_industry_focus(text: str) -> List[Tuple[str, float]]:
         print(f"Error in industry focus analysis: {e}")
         return []
 
-def generate_ml_based_recommendations(text: str, skills: List[str]) -> List[Dict]:
-    """Generate ML-based recommendations for resume improvement."""
+def generate_recommendations(text: str, skills: List[str]) -> List[Dict]:
+    """Generate recommendations for resume improvement."""
     recommendations = []
 
     # Analyze sentence structure
@@ -356,7 +353,7 @@ async def analyze_resume(request: Request, file: UploadFile = File(...)) -> Dict
 
         skills = extract_skills(text)
         ats_score = calculate_ats_score(text)
-        recommendations = generate_ml_based_recommendations(text, skills)
+        recommendations = generate_recommendations(text, skills)
 
         industry_focus = identify_industry_focus(text)
         top_industries = [ind[0].replace('_', ' ').title() for ind in industry_focus[:3] if ind[1] > 0]
