@@ -18,15 +18,15 @@ import numpy as np
 from collections import Counter
 import time
 
-# Initialize rate limiter
+
 limiter = Limiter(key_func=get_remote_address)
 
-# Initialize FastAPI app with rate limiter
+
 app = FastAPI(title="Resume Analyzer API")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Security headers
+
 SECURITY_HEADERS = {
     "X-Frame-Options": "DENY",
     "X-Content-Type-Options": "nosniff",
@@ -37,40 +37,39 @@ SECURITY_HEADERS = {
     "Permissions-Policy": "geolocation=(), microphone=(), camera=()"
 }
 
-# Configure CORS with specific origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins in production
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
     max_age=3600,
 )
 
-# Add trusted host middleware
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=["*"]  # Allow all hosts in production
+    allowed_hosts=["*"]  
 )
 
-# File size limits (in bytes)
+
 MAX_FILE_SIZE = 5 * 1024 * 1024
 ALLOWED_EXTENSIONS = {".pdf", ".docx"}
 
-# Rate limiting configuration
+
 RATE_LIMIT = "10/minute"
 
-# Request tracking for additional protection
+
 request_tracker = {}
 
-# Initialize NLP model
+
 try:
     nlp = spacy.load("en_core_web_sm")
 except Exception as e:
     print(f"Error loading spaCy model: {e}")
     raise
 
-# Define constantsi
+
 TECH_SKILLS = {
     'programming': ['python', 'javascript', 'java', 'c++', 'ruby', 'php', 'swift', 'kotlin', 'typescript'],
     'frameworks': ['react', 'angular', 'vue', 'django', 'flask', 'spring', 'express', 'node.js', 'laravel'],
@@ -113,14 +112,14 @@ def extract_skills(text: str) -> List[str]:
     doc = nlp(text.lower())
     skills = set()
 
-    # Extract skills from noun chunks
+ 
     for chunk in doc.noun_chunks:
         chunk_text = chunk.text.lower()
         for category, skill_list in TECH_SKILLS.items():
             if any(skill in chunk_text for skill in skill_list):
                 skills.add(chunk_text)
 
-    # Extract skills from named entities
+  
     for ent in doc.ents:
         if ent.label_ in ['ORG', 'PRODUCT']:
             skills.add(ent.text.lower())
@@ -172,7 +171,7 @@ def generate_recommendations(text: str, skills: List[str]) -> List[Dict]:
     """Generate recommendations for resume improvement."""
     recommendations = []
 
-    # Analyze sentence structure
+  
     avg_length, complex_sentences = analyze_sentence_structure(text)
     if avg_length > 15:
         recommendations.append({
@@ -182,7 +181,7 @@ def generate_recommendations(text: str, skills: List[str]) -> List[Dict]:
             "example": complex_sentences[0] if complex_sentences else None
         })
 
-    # Analyze action verbs
+   
     strong_verbs, weak_verbs = analyze_action_verbs(text)
     if len(strong_verbs) < 5:
         recommendations.append({
@@ -192,7 +191,7 @@ def generate_recommendations(text: str, skills: List[str]) -> List[Dict]:
             "suggestion": f"Instead of using verbs like '{', '.join(weak_verbs[:3])}', try using strong action verbs like 'developed', 'implemented', 'optimized'."
         })
 
-    # Analyze industry focus
+
     industry_focus = identify_industry_focus(text)
     if industry_focus:
         top_industry = industry_focus[0]
@@ -204,7 +203,7 @@ def generate_recommendations(text: str, skills: List[str]) -> List[Dict]:
                 "suggestion": f"Add more keywords related to {top_industry[0].replace('_', ' ')} to better target your desired industry."
             })
 
-    # Analyze skills
+
     if len(skills) < 5:
         recommendations.append({
             "type": "skills",
@@ -213,7 +212,7 @@ def generate_recommendations(text: str, skills: List[str]) -> List[Dict]:
             "suggestion": "Add specific technical skills you've used in your projects and work experience."
         })
 
-    # Check for quantifiable achievements
+
     if not re.search(r'\d+%|\$\d+|\d+\s*(?:million|billion)?', text):
         recommendations.append({
             "type": "content",
@@ -222,7 +221,7 @@ def generate_recommendations(text: str, skills: List[str]) -> List[Dict]:
             "suggestion": "Instead of 'increased sales', try 'increased sales by 25%' or 'reduced costs by $50,000'."
         })
 
-    # Check for education section
+ 
     if not re.search(r'\b(?:bachelor|master|phd|degree)\b', text.lower()):
         recommendations.append({
             "type": "structure",
@@ -238,22 +237,22 @@ def calculate_ats_score(text: str) -> float:
     score = 0.0
     max_score = 100.0
 
-    # Check for required sections
+   
     sections = ['experience', 'education', 'skills', 'projects', 'summary']
     section_score = sum(1 for section in sections if re.search(rf'\b{section}\b', text.lower()))
     score += (section_score / len(sections)) * 20
 
-    # Check for skills
+
     skills = extract_skills(text)
     skill_score = min(len(skills) / 10, 1.0)
     score += skill_score * 30
 
-    # Check for experience indicators
+   
     experience_indicators = ['years', 'experience', 'worked', 'developed', 'implemented', 'managed']
     exp_score = sum(1 for word in experience_indicators if word in text.lower()) / len(experience_indicators)
     score += exp_score * 25
 
-    # Check for education indicators
+ 
     education_indicators = ['bachelor', 'master', 'phd', 'degree', 'university', 'college']
     edu_score = sum(1 for word in education_indicators if word in text.lower()) / len(education_indicators)
     score += edu_score * 25
@@ -293,7 +292,7 @@ async def validate_request(request: Request, call_next):
 def track_request(ip: str) -> bool:
     """Track requests per IP with a time window."""
     current_time = time.time()
-    window = 60  # 1 minute window
+    window = 60 
 
     if ip not in request_tracker:
         request_tracker[ip] = []
